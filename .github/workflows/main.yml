@@ -1,0 +1,55 @@
+name: Windows to GitHub Pages Deployment
+
+on:
+  push:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Move files from public_html to root (Windows compatible)
+        shell: pwsh
+        run: |
+          if (Test-Path "public_html") {
+            Get-ChildItem -Path "public_html" | Move-Item -Destination "."
+            Remove-Item -Path "public_html" -Recurse
+          }
+          
+      - name: Install dependencies (if any)
+        run: |
+          npm ci
+          npm install
+          
+      - name: Validate HTML structure
+        run: |
+          # Basic check for index.html existence
+          if (!(Test-Path "index.html")) {
+            Write-Error "index.html not found in root directory"
+            exit 1
+          }
+          
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+          keep_files: false
+          enable_jekyll: false
+          
+      - name: Post-deployment status
+        run: |
+          $repoOwner = "${{ github.repository_owner }}"
+          $repoName = "${{ github.repository }}".Split('/')[1]
+          Write-Output "Website deployed to:"
+          Write-Output "https://$repoOwner.github.io/$repoName"
