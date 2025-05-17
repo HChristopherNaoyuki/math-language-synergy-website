@@ -1,0 +1,6 @@
+{
+  "homepage": "https://hchristophernaoyuki.github.io/math-language-synergy-website/",
+  "scripts": {
+    "deploy": "gh-pages -d public_html"
+  }
+}
