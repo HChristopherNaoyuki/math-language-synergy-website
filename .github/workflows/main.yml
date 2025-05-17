@@ -1,55 +1,85 @@
-name: Windows to GitHub Pages Deployment
+name: Deploy Math & Language Synergy Website
 
 on:
   push:
-    branches: [ "master" ]
-  workflow_dispatch:
+    branches: [ "master" ]  # Triggers on pushes to master branch
+  workflow_dispatch:        # Allows manual triggering from GitHub UI
 
 jobs:
   deploy:
-    runs-on: windows-latest
+    runs-on: windows-latest  # Uses Windows runner for compatibility
     
     steps:
-      - name: Checkout repository
+      # Step 1: Checkout the repository
+      - name: Checkout code
         uses: actions/checkout@v4
-        
+        with:
+          fetch-depth: 0     # Fetches entire commit history
+
+      # Step 2: Set up Node.js (needed for potential npm dependencies)
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-          
-      - name: Move files from public_html to root (Windows compatible)
+          node-version: '18' # LTS version with good Windows support
+          cache: 'npm'       # Caches node_modules for faster runs
+
+      # Step 3: Windows-compatible file movement from public_html to root
+      - name: Prepare deployment files
+        shell: pwsh         # Uses PowerShell for Windows compatibility
+        run: |
+          # Check if public_html exists
+          if (Test-Path -Path "public_html") {
+            Write-Output "Moving files from public_html to root..."
+            
+            # Move all files recursively while preserving structure
+            Get-ChildItem -Path "public_html" -Recurse | ForEach-Object {
+              $targetPath = $_.FullName.Replace("public_html", ".")
+              $targetDir = [System.IO.Path]::GetDirectoryName($targetPath)
+              
+              # Create target directory if it doesn't exist
+              if (!(Test-Path -Path $targetDir)) {
+                New-Item -ItemType Directory -Path $targetDir | Out-Null
+              }
+              
+              Move-Item -Path $_.FullName -Destination $targetPath -Force
+            }
+            
+            # Remove empty public_html directory
+            Remove-Item -Path "public_html" -Recurse -Force
+            Write-Output "File movement completed successfully"
+          } else {
+            Write-Output "public_html directory not found - proceeding with root files"
+          }
+
+      # Step 4: Verify essential files exist
+      - name: Validate deployment structure
         shell: pwsh
         run: |
-          if (Test-Path "public_html") {
-            Get-ChildItem -Path "public_html" | Move-Item -Destination "."
-            Remove-Item -Path "public_html" -Recurse
-          }
+          # Check for required files
+          $requiredFiles = @("index.html", "css/style.css", "js/script.js")
+          $missingFiles = $requiredFiles | Where-Object { !(Test-Path -Path $_) }
           
-      - name: Install dependencies (if any)
-        run: |
-          npm ci
-          npm install
-          
-      - name: Validate HTML structure
-        run: |
-          # Basic check for index.html existence
-          if (!(Test-Path "index.html")) {
-            Write-Error "index.html not found in root directory"
+          if ($missingFiles) {
+            Write-Error "Missing required files: $($missingFiles -join ', ')"
             exit 1
           }
           
-      - name: Deploy to GitHub Pages
+          Write-Output "All required files present"
+
+      # Step 5: Deploy to GitHub Pages
+      - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./
-          keep_files: false
-          enable_jekyll: false
-          
-      - name: Post-deployment status
+          github_token: ${{ secrets.GITHUB_TOKEN }}  # Auto-generated secret
+          publish_dir: ./                           # Publish from root
+          keep_files: false                         # Clean existing files
+          enable_jekyll: false                      # Disable Jekyll processing
+          force_orphan: true                        # Single branch deployment
+
+      # Step 6: Success notification
+      - name: Post-deployment
+        shell: pwsh
         run: |
-          $repoOwner = "${{ github.repository_owner }}"
-          $repoName = "${{ github.repository }}".Split('/')[1]
-          Write-Output "Website deployed to:"
-          Write-Output "https://$repoOwner.github.io/$repoName"
+          $url = "https://${{ github.repository_owner }}.github.io/$($env:GITHUB_REPOSITORY.Split('/')[1])"
+          Write-Output "::notice title=Deployment Successful::Website deployed to $url"
+          Write-Output "Deployment URL: $url"
