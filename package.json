@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://hchristophernaoyuki.github.io/math-language-synergy-website/"
+    "url": "https://hchristophernaoyuki.github.io/math-language-synergy-website"
   },
   "keywords": [
     "education",
@@ -16,12 +16,12 @@
     "mathematics",
     "static-website"
   ],
-  "author": "Your Name",
+  "author": "Naoyuki Chrsitopher H.",
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://hchristophernaoyuki.github.io/math-language-synergy-website/issue"
   },
-  "homepage": "https://hchristophernaoyuki.github.io/math-language-synergy-website/",
+  "homepage": "https://hchristophernaoyuki.github.io/math-language-synergy-website",
   "dependencies": {},
   "devDependencies": {}
 }
