@@ -1,67 +1,46 @@
-name: Deploy Static Site to GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches: [ "master" ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   deploy:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest  # More reliable for GitHub Pages
     
     steps:
-      # 1. Checkout code without Node.js setup
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-        
-      # 2. Windows-friendly file copy
-      - name: Prepare deployment files
-        shell: pwsh
-        run: |
-          # Check if public_html exists
-          if (Test-Path "public_html") {
-            Write-Host "Copying files from public_html to root..."
-            
-            # Copy all content recursively
-            Copy-Item -Path "public_html\*" -Destination "." -Recurse -Force
-            
-            # Verify at least index.html exists
-            if (-not (Test-Path "index.html")) {
-              Write-Error "Critical error: index.html not found after copy"
-              exit 1
-            }
-            
-            Write-Host "Files copied successfully"
-          } else {
-            Write-Host "No public_html directory found - deploying root files"
-          }
-          
-      # 3. Validate essential files
-      - name: Verify required files
-        shell: pwsh
-        run: |
-          $required = @("index.html", "css/style.css")
-          $missing = $required | Where-Object { -not (Test-Path $_) }
-          
-          if ($missing) {
-            Write-Error "Missing required files: $($missing -join ', ')"
-            exit 1
-          }
-          
-          Write-Host "All required files present"
-          
-      # 4. Deploy to GitHub Pages
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./
-          keep_files: false
-          enable_jekyll: false
-          
-      # 5. Success notification
-      - name: Post-deployment
+          fetch-depth: 0
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
+      - name: Move files from public_html
         run: |
-          echo "Deployment successful!"
-          echo "View your site at:"
-          echo "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          if [ -d "public_html" ]; then
+            mv public_html/{.,}* . || true  # Moves all files including hidden
+            rm -rf public_html
+          fi
+          ls -la  # Verify file structure
+
+      - name: Verify files
+        run: |
+          [ -f "index.html" ] || (echo "Error: index.html missing" && exit 1)
+          [ -d "css" ] || (echo "Warning: css directory missing" && exit 0)
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: .
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
