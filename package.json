@@ -2,26 +2,10 @@
   "name": "math-language-synergy-website",
   "version": "1.0.0",
   "description": "Static website for Math and Language Synergy",
+  "private": true,
   "scripts": {
-    "test": "echo \"No tests specified\" && exit 0",
-    "build": "echo \"No build step required\" && exit 0"
+    "test": "echo \"Static site - no tests required\" && exit 0"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://hchristophernaoyuki.github.io/math-language-synergy-website"
-  },
-  "keywords": [
-    "education",
-    "language",
-    "mathematics",
-    "static-website"
-  ],
-  "author": "Naoyuki Chrsitopher H.",
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://hchristophernaoyuki.github.io/math-language-synergy-website/issue"
-  },
-  "homepage": "https://hchristophernaoyuki.github.io/math-language-synergy-website",
   "dependencies": {},
   "devDependencies": {}
 }
