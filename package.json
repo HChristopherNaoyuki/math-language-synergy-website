@@ -1,11 +1,10 @@
 {
   "name": "math-language-synergy-website",
   "version": "1.0.0",
-  "description": "Static website for Math and Language Synergy",
+  "description": "Official website for Math and Language Synergy",
   "private": true,
   "scripts": {
-    "test": "echo \"Static site - no tests required\" && exit 0"
+    "deploy": "echo 'Deployment handled by GitHub Actions'"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "license": "Apache-2.0"
 }
